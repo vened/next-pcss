@@ -1,11 +1,11 @@
-const ExtractCssChunks = require('extract-css-chunks-webpack-plugin')
-const findUp = require('find-up')
-const OptimizeCssAssetsWebpackPlugin = require('optimize-css-assets-webpack-plugin')
+const ExtractCssChunks = require('extract-css-chunks-webpack-plugin');
+const findUp = require('find-up');
+const OptimizeCssAssetsWebpackPlugin = require('optimize-css-assets-webpack-plugin');
 
-const fileExtensions = new Set()
-let extractCssInitialized = false
+const fileExtensions = new Set();
+let extractCssInitialized = false;
 
-module.exports = (
+const cssLoaderConfig = (
   config,
   {
     extensions = [],
@@ -14,12 +14,12 @@ module.exports = (
     dev,
     isServer,
     postcssLoaderOptions = {},
-    loaders = []
-  }
+    loaders = [],
+  },
 ) => {
   // We have to keep a list of extensions for the splitchunk config
   for (const extension of extensions) {
-    fileExtensions.add(extension)
+    fileExtensions.add(extension);
   }
 
   if (!isServer) {
@@ -27,8 +27,8 @@ module.exports = (
       name: 'styles',
       test: new RegExp(`\\.+(${[...fileExtensions].join('|')})$`),
       chunks: 'all',
-      enforce: true
-    }
+      enforce: true,
+    };
   }
 
   if (!isServer && !extractCssInitialized) {
@@ -42,44 +42,44 @@ module.exports = (
         chunkFilename: dev
           ? 'static/chunks/[name].chunk.css'
           : 'static/chunks/[name].[contenthash:8].chunk.css',
-      })
-    )
-    extractCssInitialized = true
+      }),
+    );
+    extractCssInitialized = true;
   }
 
   if (!dev) {
     if (!Array.isArray(config.optimization.minimizer)) {
-      config.optimization.minimizer = []
+      config.optimization.minimizer = [];
     }
 
     config.optimization.minimizer.push(
       new OptimizeCssAssetsWebpackPlugin({
         cssProcessorOptions: {
-          discardComments: { removeAll: true }
-        }
-      })
-    )
+          discardComments: { removeAll: true },
+        },
+      }),
+    );
   }
 
   const postcssConfigPath = findUp.sync('postcss.config.js', {
-    cwd: config.context
-  })
-  let postcssLoader
+    cwd: config.context,
+  });
+  let postcssLoader;
 
   if (postcssConfigPath) {
     // Copy the postcss-loader config options first.
     const postcssOptionsConfig = Object.assign(
       {},
       postcssLoaderOptions.config,
-      { path: postcssConfigPath }
-    )
+      { path: postcssConfigPath },
+    );
 
     postcssLoader = {
       loader: 'postcss-loader',
       options: Object.assign({}, postcssLoaderOptions, {
-        config: postcssOptionsConfig
-      })
-    }
+        config: postcssOptionsConfig,
+      }),
+    };
   }
 
   const cssLoader = {
@@ -90,34 +90,41 @@ module.exports = (
         modules: cssModules,
         sourceMap: dev,
         importLoaders: loaders.length + (postcssLoader ? 1 : 0),
-        onlyLocals: isServer
+        onlyLocals: isServer,
       },
-      cssLoaderOptions
-    )
-  }
+      cssLoaderOptions,
+    ),
+  };
 
   const ExtractCssChunksLoader = {
     loader: ExtractCssChunks.loader,
     options: {
       hot: true,
-      reloadAll: true
+      reloadAll: true,
     },
-  }
+  };
 
   // When not using css modules we don't transpile on the server
-  if (isServer && !cssLoader.options.modules) {
-    return ['ignore-loader']
-  }
+  // if (isServer && !cssLoader.options.modules) {
+  //   return ['ignore-loader'];
+  // }
 
   // When on the server and using css modules we transpile the css
   if (isServer && cssLoader.options.modules) {
-    return [cssLoader, postcssLoader, ...loaders].filter(Boolean)
+    return [
+      cssLoader,
+      postcssLoader,
+      ...loaders,
+    ].filter(Boolean);
   }
 
   return [
     !isServer && ExtractCssChunksLoader,
     cssLoader,
     postcssLoader,
-    ...loaders
-  ].filter(Boolean)
-}
+    ...loaders,
+  ].filter(Boolean);
+};
+
+
+module.exports = cssLoaderConfig;
