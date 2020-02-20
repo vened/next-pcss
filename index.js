@@ -17,7 +17,7 @@ const config = (nextConfig = {}) => {
       const { dev, isServer } = webpackOptions;
       const { cssModules, cssLoaderOptions, postcssLoaderOptions, exclude } = nextConfig;
 
-      console.log('-----------------------');
+      // console.log('-----------------------');
       // console.log('cssModules', cssModules);
       // console.log('exclude', exclude);
 
@@ -49,7 +49,7 @@ const config = (nextConfig = {}) => {
         use: webpackOptions.defaultLoaders.css,
       };
 
-      console.log(webpackOptions.defaultLoaders.css);
+      // console.log(webpackOptions.defaultLoaders.css);
 
       const cssModuleRule = {
         test: cssModuleRegex,
